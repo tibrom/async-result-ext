@@ -2,5 +2,16 @@
 name = "async-result-ext"
 version = "0.1.0"
 edition = "2024"
+authors = ["Andrei tibromcrm@gmail.com"]
+description = "Async extensions for Result<T, E> with async closures."
+license = "MIT"
+repository = "https://github.com/tibrom/async-result-ext"
+documentation = "https://docs.rs/async-result-ext"
+readme = "README.md"
+categories = ["asynchronous", "rust-patterns"]
+keywords = ["async", "result", "extension", "future", "async_map"]
 
 [dependencies]
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }
