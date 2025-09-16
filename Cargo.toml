@@ -14,4 +14,4 @@ keywords = ["async", "result", "extension", "future", "async_map"]
 [dependencies]
 
 [dev-dependencies]
-tokio = { version = "1", features = ["rt", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
