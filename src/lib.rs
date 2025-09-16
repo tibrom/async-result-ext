@@ -103,95 +103,83 @@ pub trait AsyncResultExt<T, E> {
 }
 
 impl<T, E> AsyncResultExt<T, E> for Result<T, E> {
-    fn async_map<U, F, Fut>(self, op: F) -> impl Future<Output = Result<U, E>>
+    async fn async_map<U, F, Fut>(self, op: F) -> Result<U, E>
     where
         F: FnOnce(T) -> Fut,
         Fut: Future<Output = U>,
     {
-        async move {
-            match self {
-                Ok(value) => Ok(op(value).await),
-                Err(err) => Err(err),
-            }
+        match self {
+            Ok(value) => Ok(op(value).await),
+            Err(err) => Err(err),
         }
     }
 
-    fn async_and_then<U, F, Fut>(self, op: F) -> impl Future<Output = Result<U, E>>
+    async fn async_and_then<U, F, Fut>(self, op: F) -> Result<U, E>
     where
         F: FnOnce(T) -> Fut,
         Fut: Future<Output = Result<U, E>>,
     {
-        async move {
-            match self {
-                Ok(value) => op(value).await,
-                Err(err) => Err(err),
-            }
+        match self {
+            Ok(value) => op(value).await,
+            Err(err) => Err(err),
         }
     }
 
-    fn async_map_or<U, F, Fut>(self, default: U, op: F) -> impl Future<Output = U>
+    async fn async_map_or<U, F, Fut>(self, default: U, op: F) -> U
     where
         F: FnOnce(T) -> Fut,
         Fut: Future<Output = U>,
     {
-        async move {
-            match self {
-                Ok(value) => op(value).await,
-                Err(_) => default,
-            }
+        match self {
+            Ok(value) => op(value).await,
+            Err(_) => default,
         }
     }
-    fn async_map_or_else<U, D, F, Fut, DefFut>(self, default: D, op: F) -> impl Future<Output = U>
-        where
-            D: FnOnce(E) -> DefFut,
-            F: FnOnce(T) -> Fut,
-            DefFut: Future<Output = U>,
-            Fut: Future<Output = U> {
-        async move {
-            match self {
-                Ok(value) => op(value).await,
-                Err(err) => default(err).await,
-            }
+    async fn async_map_or_else<U, D, F, Fut, DefFut>(self, default: D, op: F) -> U
+    where
+        D: FnOnce(E) -> DefFut,
+        F: FnOnce(T) -> Fut,
+        DefFut: Future<Output = U>,
+        Fut: Future<Output = U>,
+    {
+        match self {
+            Ok(value) => op(value).await,
+            Err(err) => default(err).await,
         }
     }
 
-    fn async_map_err<F, Fut, O>(self, op: F) -> impl Future<Output = Result<T, O>>
-        where
-            F: FnOnce(E) -> Fut,
-            Fut: Future<Output = O> {
-        async move {
-            match self {
-                Ok(value) => Ok(value),
-                Err(err) => Err(op(err).await),
-            }
+    async fn async_map_err<F, Fut, O>(self, op: F) -> Result<T, O>
+    where
+        F: FnOnce(E) -> Fut,
+        Fut: Future<Output = O>,
+    {
+        match self {
+            Ok(value) => Ok(value),
+            Err(err) => Err(op(err).await),
         }
     }
 
-    fn async_inspect<F, Fut>(self, op: F) -> impl Future<Output = Self>
-        where
-            F: FnOnce(&T) -> Fut,
-            Fut: Future<Output = ()> {
-        async move {
-            if let Ok(ref value) = self {
-                op(value).await;
-            }
-            self
+    async fn async_inspect<F, Fut>(self, op: F) -> Self
+    where
+        F: FnOnce(&T) -> Fut,
+        Fut: Future<Output = ()>,
+    {
+        if let Ok(ref value) = self {
+            op(value).await;
         }
+        self
     }
 
-    fn async_inspect_err<F, Fut>(self, op: F) -> impl Future<Output = Self>
-        where
-            F: FnOnce(&E) -> Fut,
-            Fut: Future<Output = ()> {
-        async move {
-            if let Err(ref err) = self {
-                op(err).await;
-            }
-            self
+    async fn async_inspect_err<F, Fut>(self, op: F) -> Self
+    where
+        F: FnOnce(&E) -> Fut,
+        Fut: Future<Output = ()>,
+    {
+        if let Err(ref err) = self {
+            op(err).await;
         }
+        self
     }
-    
-     
 }
 
 #[cfg(test)]
@@ -231,8 +219,6 @@ mod tests {
         assert_eq!(res, 100);
     }
 
-    
-
     #[tokio::test]
     async fn test_async_map_err() {
         let r: Result<i32, &str> = Ok(10);
@@ -243,7 +229,6 @@ mod tests {
         let res = r.async_map_err(|e| async move { e.len() }).await;
         assert_eq!(res, Err(4));
     }
-
 
     #[tokio::test]
     async fn test_async_inspect_err() {
@@ -280,6 +265,4 @@ mod tests {
             .await;
         assert_eq!(res, 5);
     }
-
 }
-
