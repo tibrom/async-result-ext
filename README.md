@@ -109,4 +109,4 @@ async fn main() {
 
 ## 🔧 License
 
-MIT License. See [LICENSE.txt](LICENSE) for details.
+MIT License. See [LICENSE](LICENSE.txt) for details.
