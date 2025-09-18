@@ -105,6 +105,11 @@ pub trait AsyncResultExt<T, E> {
     where
         F: FnOnce(T) -> Fut,
         Fut: Future<Output = bool>;
+
+    fn async_is_err_and<F, Fut>(self, op: F) -> impl Future<Output = bool>
+    where
+        F: FnOnce(E) -> Fut,
+        Fut: Future<Output = bool>;
 }
 
 impl<T, E> AsyncResultExt<T, E> for Result<T, E> {
@@ -195,6 +200,19 @@ impl<T, E> AsyncResultExt<T, E> for Result<T, E> {
             match self {
                 Err(_) => false,
                 Ok(v) => op(v).await,
+            }
+        }
+    }
+
+    async fn async_is_err_and<F, Fut>(self, op: F) -> bool
+    where
+        F: FnOnce(E) -> Fut,
+        Fut: Future<Output = bool>,
+    {
+        {
+            match self {
+                Ok(_) => false,
+                Err(e) => op(e).await,
             }
         }
     }
@@ -292,6 +310,17 @@ mod tests {
 
         let r: Result<i32, &str> = Err("error");
         let res = r.async_is_ok_and(|_| async move { false }).await;
+        assert!(!res);
+    }
+
+    #[tokio::test]
+    async fn is_err_and() {
+        let r: Result<i32, &str> = Ok(5);
+        let res = r.async_is_err_and(|_| async move { true }).await;
+        assert!(!res);
+
+        let r: Result<i32, &str> = Err("error");
+        let res = r.async_is_err_and(|_| async move { false }).await;
         assert!(!res);
     }
 }
