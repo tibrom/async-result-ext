@@ -1,6 +1,6 @@
 [package]
 name = "async-result-ext"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Andrei tibromcrm@gmail.com"]
 description = "Async extensions for Result<T, E> with async closures."

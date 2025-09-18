@@ -82,6 +82,16 @@ async fn main() {
     err.async_inspect_err(|e| async move {
         eprintln!("Error: {e}");
     }).await;
+
+    // async_is_ok_and: check condition asynchronously on Ok values
+    let r: Result<i32, &str> = Ok(10);
+    let is_even = r.async_is_ok_and(|v| async move { v % 2 == 0 }).await;
+    assert!(is_even);
+
+    // async_is_err_and: check condition asynchronously on Err values
+    let r: Result<i32, &str> = Err("boom!");
+    let too_long = r.async_is_err_and(|e| async move { e.len() > 3 }).await;
+    assert!(too_long);
 }
 ```
 
@@ -96,6 +106,8 @@ async fn main() {
 - `async_map_err` – async version of [`Result::map_err`]
 - `async_inspect` – async version of [`Result::inspect`]
 - `async_inspect_err` – async version of [`Result::inspect_err`]
+- `async_is_ok_and` - async version of [`Result::is_ok_and`]
+- `async_is_err_and` - async version of [`Result::is_err_and`]
 
 ---
 
